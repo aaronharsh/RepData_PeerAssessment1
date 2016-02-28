@@ -1,11 +1,7 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
-```{r, message = FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 ```
@@ -14,7 +10,8 @@ library(ggplot2)
 
 First we read the contents of our zip file, and aggregate by day and by interval.
 
-```{r, message = FALSE}
+
+```r
 activity <- read.csv(unz("activity.zip", "activity.csv"))
 activity$date <- as.Date(activity$date)
 
@@ -26,20 +23,33 @@ steps.by.interval <- activity %>% group_by(interval) %>% summarise(mean.steps = 
 
 The daily total step count follows this distribution:
 
-```{r, message = FALSE}
+
+```r
 ggplot(steps.by.date, aes(total.steps)) + geom_histogram()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)
+
 Mean daily step count is
 
-```{r}
+
+```r
 mean(steps.by.date$total.steps)
+```
+
+```
+## [1] 9354.23
 ```
 
 Median daily step count is
 
-```{r}
+
+```r
 median(steps.by.date$total.steps)
+```
+
+```
+## [1] 10395
 ```
 
 
@@ -47,27 +57,41 @@ median(steps.by.date$total.steps)
 
 Activity varies throughout the day.  Witness the mean number of daily steps by interval:
 
-```{r, message = FALSE}
+
+```r
 ggplot(steps.by.interval, aes(x = interval, y = mean.steps, group= 1)) + geom_line()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)
+
 An early morning interval seems to have the largest number of total steps.  That interval is:
 
-```{r}
+
+```r
 activity[which.max(steps.by.interval$mean.steps), 'interval']
+```
+
+```
+## [1] 835
 ```
 
 ## Imputing missing values
 
 A large number of values in the dataset are missing ("NA").
 
-```{r}
+
+```r
 sum(is.na(activity$steps))
+```
+
+```
+## [1] 2304
 ```
 
 One strategy to fill in the missing values is to use the mean for the interval:
 
-```{r}
+
+```r
 imputed <- activity %>% inner_join(steps.by.interval, by = "interval")
 missing.steps <- is.na(imputed$steps)
 imputed$steps[missing.steps] <- imputed$mean.steps[missing.steps]
@@ -75,23 +99,39 @@ imputed$steps[missing.steps] <- imputed$mean.steps[missing.steps]
 
 With our missing values filled in the new daily step count histogram looks like so:
 
-```{r, message = FALSE}
+
+```r
 imputed.steps.by.date <- imputed %>% group_by(date) %>% summarise(total.steps = sum(steps, na.rm = TRUE))
 ggplot(imputed.steps.by.date, aes(total.steps)) + geom_histogram()
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-10-1.png)
+
 The revised mean and media, with missing values imputed, are:
 
-```{r}
+
+```r
 mean(imputed.steps.by.date$total.steps)
+```
+
+```
+## [1] 10766.19
+```
+
+```r
 median(imputed.steps.by.date$total.steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 Both mean and media have increased.  The increase in mean was more substantial.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
-```{r, message = FALSE}
+
+```r
 imputed$weekpart = ifelse(weekdays(imputed$date) %in% c("Saturday", "Sunday"),
                           "weekend",
                           "weekday")
@@ -103,3 +143,5 @@ ggplot(imputed.steps.by.weekpart.interval, aes(x = interval, y = mean.steps)) +
   facet_grid(. ~ weekpart) +
   geom_line()
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-12-1.png)
